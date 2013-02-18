@@ -2,17 +2,14 @@ package net.exacode.example.infrastructure.context.app;
 
 import net.exacode.example.infrastructure.eventbus.DeadEvent;
 import net.exacode.example.infrastructure.eventbus.EventBus;
-import net.exacode.example.infrastructure.eventbus.dispatch.AsyncEventDispatchStrategy;
-import net.exacode.example.infrastructure.eventbus.dispatch.UniqueEventDispatchStrategy;
-import net.exacode.example.infrastructure.eventbus.dispatch.AsyncEventDispatchStrategy.AsyncEventDescriptor;
-import net.exacode.example.infrastructure.eventbus.dispatch.UniqueEventDispatchStrategy.UniqueEventDescriptor;
-import net.exacode.example.infrastructure.eventbus.handler.AnnotatedMethodHandlerFinder;
+import net.exacode.example.infrastructure.eventbus.builder.EventBusBuilder;
+import net.exacode.example.infrastructure.eventbus.dispatch.AsyncDispatchStrategy.AsyncEventDescriptor;
+import net.exacode.example.infrastructure.eventbus.dispatch.UniqueDispatchStrategy.UniqueEventDescriptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ApplicationContextImpl extends EventBus implements
-		ApplicationContext {
+public class ApplicationContextImpl implements ApplicationContext {
 	private static class EventDescriptor implements AsyncEventDescriptor,
 			UniqueEventDescriptor {
 
@@ -22,8 +19,8 @@ public class ApplicationContextImpl extends EventBus implements
 
 		@Override
 		public boolean isAsync(Object event) {
-			ApplicationEvent eventAnnotation = event.getClass().getAnnotation(
-					ApplicationEvent.class);
+			AppEvent eventAnnotation = event.getClass().getAnnotation(
+					AppEvent.class);
 			boolean async = DEFAULT_ASYNC;
 			if (eventAnnotation != null) {
 				async = eventAnnotation.async();
@@ -33,8 +30,8 @@ public class ApplicationContextImpl extends EventBus implements
 
 		@Override
 		public boolean isUnique(Object event) {
-			ApplicationEvent eventAnnotation = event.getClass().getAnnotation(
-					ApplicationEvent.class);
+			AppEvent eventAnnotation = event.getClass().getAnnotation(
+					AppEvent.class);
 			boolean unique = DEFAULT_UNIQUE;
 			if (eventAnnotation != null) {
 				unique = eventAnnotation.unique();
@@ -44,22 +41,42 @@ public class ApplicationContextImpl extends EventBus implements
 
 	}
 
+	private final EventBus eventBus;
+
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public ApplicationContextImpl() {
 		EventDescriptor eventDescriptor = new EventDescriptor();
-		AsyncEventDispatchStrategy asyncDispatch = new AsyncEventDispatchStrategy(
-				new EventDescriptor());
-		UniqueEventDispatchStrategy uniqueDispatch = new UniqueEventDispatchStrategy(
-				eventDescriptor, asyncDispatch);
-		setEventDispatchStrategy(uniqueDispatch);
-		setMethodHandlerFindingStrategy(new AnnotatedMethodHandlerFinder<ApplicationEvent>(
-				ApplicationEvent.class));
+
+		eventBus = new EventBusBuilder().eventDispatchStrategy()
+				.async(eventDescriptor).unique(eventDescriptor)
+				.buildEventDispatchStrategy()
+				.annotatedMethodHandlerFindingStrategy(AppEventListener.class)
+				.buildEventBus();
 	}
 
 	@AppEventListener
 	public void handleDeadEvent(DeadEvent deadEvent) {
 		logger.warn("Published event with no handler!\nEvent: {}",
 				deadEvent.getEvent());
+	}
+
+	public EventBus getEventBus() {
+		return eventBus;
+	}
+
+	@Override
+	public void publish(Object event) {
+		eventBus.publish(event);
+	}
+
+	@Override
+	public void subscribe(Object handler) {
+		eventBus.subscribe(handler);
+	}
+
+	@Override
+	public void unsubscribe(Object handler) {
+		eventBus.unsubscribe(handler);
 	}
 }

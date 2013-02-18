@@ -2,16 +2,14 @@ package net.exacode.example.infrastructure.context.gate;
 
 import net.exacode.example.infrastructure.eventbus.DeadEvent;
 import net.exacode.example.infrastructure.eventbus.EventBus;
-import net.exacode.example.infrastructure.eventbus.dispatch.AsyncEventDispatchStrategy;
-import net.exacode.example.infrastructure.eventbus.dispatch.UniqueEventDispatchStrategy;
-import net.exacode.example.infrastructure.eventbus.dispatch.AsyncEventDispatchStrategy.AsyncEventDescriptor;
-import net.exacode.example.infrastructure.eventbus.dispatch.UniqueEventDispatchStrategy.UniqueEventDescriptor;
-import net.exacode.example.infrastructure.eventbus.handler.AnnotatedMethodHandlerFinder;
+import net.exacode.example.infrastructure.eventbus.builder.EventBusBuilder;
+import net.exacode.example.infrastructure.eventbus.dispatch.AsyncDispatchStrategy.AsyncEventDescriptor;
+import net.exacode.example.infrastructure.eventbus.dispatch.UniqueDispatchStrategy.UniqueEventDescriptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GateImpl extends EventBus implements Gate {
+public class GateImpl implements Gate {
 
 	private static class EventDescriptor implements AsyncEventDescriptor,
 			UniqueEventDescriptor {
@@ -42,17 +40,17 @@ public class GateImpl extends EventBus implements Gate {
 
 	}
 
+	private final EventBus eventBus;
+
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public GateImpl() {
 		EventDescriptor eventDescriptor = new EventDescriptor();
-		AsyncEventDispatchStrategy asyncDispatch = new AsyncEventDispatchStrategy(
-				new EventDescriptor());
-		UniqueEventDispatchStrategy uniqueDispatch = new UniqueEventDispatchStrategy(
-				eventDescriptor, asyncDispatch);
-		setMethodHandlerFindingStrategy(new AnnotatedMethodHandlerFinder<Command>(
-				Command.class));
-		setEventDispatchStrategy(uniqueDispatch);
+		eventBus = new EventBusBuilder().eventDispatchStrategy()
+				.async(eventDescriptor).unique(eventDescriptor)
+				.buildEventDispatchStrategy()
+				.annotatedMethodHandlerFindingStrategy(CommandHandler.class)
+				.buildEventBus();
 	}
 
 	@CommandHandler
@@ -60,4 +58,14 @@ public class GateImpl extends EventBus implements Gate {
 		logger.warn("Published event with no handler!\nEvent: {}",
 				deadEvent.getEvent());
 	}
+
+	@Override
+	public void publish(Object event) {
+		eventBus.publish(event);
+	}
+
+	public EventBus getEventBus() {
+		return eventBus;
+	}
+
 }

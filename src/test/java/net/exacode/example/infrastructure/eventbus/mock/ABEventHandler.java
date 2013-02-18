@@ -1,14 +1,14 @@
-package net.exacode.example.infrastructure.eventbus;
+package net.exacode.example.infrastructure.eventbus.mock;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import net.exacode.example.infrastructure.eventbus.handler.EventHandler;
+import net.exacode.example.infrastructure.eventbus.EventHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ABEventHandler {
+public class ABEventHandler {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private final List<AEvent> receivedAEvents = new ArrayList<AEvent>();
@@ -33,7 +33,7 @@ class ABEventHandler {
 		return receivedAEvents;
 	}
 
-	protected List<BEvent> getReceivedBEvents() {
+	public List<BEvent> getReceivedBEvents() {
 		return receivedBEvents;
 	}
 

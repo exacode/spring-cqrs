@@ -1,4 +1,4 @@
-package net.exacode.example.infrastructure.eventbus.handler;
+package net.exacode.example.infrastructure.eventbus;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -7,10 +7,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import net.exacode.example.infrastructure.eventbus.EventBus;
-
 /**
- * Simple event method handler annotation used by default be {@link EventBus}.
+ * Simple event method handler annotation used by default by {@link EventBus}.
  * 
  * @author mendlik
  * 

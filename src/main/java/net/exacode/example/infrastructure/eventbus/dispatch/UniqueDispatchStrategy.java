@@ -3,11 +3,10 @@ package net.exacode.example.infrastructure.eventbus.dispatch;
 import java.util.Set;
 
 import net.exacode.example.infrastructure.eventbus.EventBus;
-import net.exacode.example.infrastructure.eventbus.handler.MethodHandler;
-
+import net.exacode.example.infrastructure.eventbus.handler.HandlerMethod;
 
 /**
- * Checks if passed event has not more than one connected handlers.
+ * Checks if passed event has not more than one handler connected.
  * <p>
  * Otherwise throws {@link IllegalStateException}
  * 
@@ -15,13 +14,13 @@ import net.exacode.example.infrastructure.eventbus.handler.MethodHandler;
  * @author mendlik
  * 
  */
-public class UniqueEventDispatchStrategy implements EventDispatchStrategy {
+public class UniqueDispatchStrategy implements DispatchStrategy {
 
 	static public interface UniqueEventDescriptor {
 		boolean isUnique(Object event);
 	}
 
-	private UniqueEventDescriptor eventDescriptor = new UniqueEventDescriptor() {
+	public static final UniqueEventDescriptor DEFAULT_EVENT_DESCRIPTOR = new UniqueEventDescriptor() {
 
 		@Override
 		public boolean isUnique(Object event) {
@@ -30,27 +29,29 @@ public class UniqueEventDispatchStrategy implements EventDispatchStrategy {
 
 	};
 
-	private EventDispatchStrategy dispatchStrategy = new SimpleEventDispatchStrategy();
+	public UniqueEventDescriptor eventDescriptor = DEFAULT_EVENT_DESCRIPTOR;
 
-	public UniqueEventDispatchStrategy(UniqueEventDescriptor eventDescriptor,
-			EventDispatchStrategy dispatchStrategy) {
+	private DispatchStrategy dispatchStrategy = new SyncDispatchStrategy();
+
+	public UniqueDispatchStrategy(UniqueEventDescriptor eventDescriptor,
+			DispatchStrategy dispatchStrategy) {
 		this.eventDescriptor = eventDescriptor;
 		this.dispatchStrategy = dispatchStrategy;
 	}
 
-	public UniqueEventDispatchStrategy(UniqueEventDescriptor eventDescriptor) {
+	public UniqueDispatchStrategy(UniqueEventDescriptor eventDescriptor) {
 		this.eventDescriptor = eventDescriptor;
 	}
 
-	public UniqueEventDispatchStrategy(EventDispatchStrategy dispatchStrategy) {
+	public UniqueDispatchStrategy(DispatchStrategy dispatchStrategy) {
 		this.dispatchStrategy = dispatchStrategy;
 	}
 
-	public UniqueEventDispatchStrategy() {
+	public UniqueDispatchStrategy() {
 	}
 
 	@Override
-	public void dispatchEvent(Object event, Set<MethodHandler> handlerMethods,
+	public void dispatchEvent(Object event, Set<HandlerMethod> handlerMethods,
 			EventBus eventBus) {
 		if (handlerMethods.size() > 1 && eventDescriptor.isUnique(event)) {
 			throw new IllegalStateException(

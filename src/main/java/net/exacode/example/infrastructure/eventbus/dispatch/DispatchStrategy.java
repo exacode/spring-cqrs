@@ -3,7 +3,7 @@ package net.exacode.example.infrastructure.eventbus.dispatch;
 import java.util.Set;
 
 import net.exacode.example.infrastructure.eventbus.EventBus;
-import net.exacode.example.infrastructure.eventbus.handler.MethodHandler;
+import net.exacode.example.infrastructure.eventbus.handler.HandlerMethod;
 
 
 /**
@@ -12,7 +12,7 @@ import net.exacode.example.infrastructure.eventbus.handler.MethodHandler;
  * @author mendlik
  * 
  */
-public interface EventDispatchStrategy {
+public interface DispatchStrategy {
 
 	/**
 	 * Defines event dispatch startegy.
@@ -24,6 +24,6 @@ public interface EventDispatchStrategy {
 	 * @param eventBus
 	 *            - source eventBus
 	 */
-	void dispatchEvent(Object event, Set<MethodHandler> handlerMethods,
+	void dispatchEvent(Object event, Set<HandlerMethod> handlerMethods,
 			EventBus eventBus);
 }

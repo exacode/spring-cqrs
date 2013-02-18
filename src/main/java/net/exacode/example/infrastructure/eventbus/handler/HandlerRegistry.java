@@ -9,45 +9,47 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
- * Stores and organizes {@link MethodHandler}s.
+ * Stores and organizes {@link HandlerMethod}s.
+ * <p>
+ * Thread safe.
  * 
  * @author mendlik
  * 
  */
-public class EventHandlerRegistry {
+public class HandlerRegistry {
 
-	private final Map<Class<?>, Set<MethodHandler>> eventHandlerMethods = new HashMap<Class<?>, Set<MethodHandler>>();
+	private final Map<Class<?>, Set<HandlerMethod>> eventHandlerMethods = new HashMap<Class<?>, Set<HandlerMethod>>();
 
-	private final MethodHandlerFindingStrategy finder;
+	private final HandlerMethodFinder finder;
 
 	private final Map<Class<?>, Set<Class<?>>> flattenHierarchyCache = new WeakHashMap<Class<?>, Set<Class<?>>>();
 
-	public EventHandlerRegistry(MethodHandlerFindingStrategy finder) {
+	public HandlerRegistry(HandlerMethodFinder finder) {
 		this.finder = finder;
 	}
 
 	/**
-	 * Adds {@link MethodHandler}s extracted from handler object.
+	 * Adds {@link HandlerMethod}s extracted from handler object.
 	 * 
 	 * @param handler
 	 */
 	synchronized public void addHandler(Object handler) {
-		eventHandlerMethods.putAll(finder.findAllHandlers(handler));
+		eventHandlerMethods.putAll(finder.findHandlerMethods(handler));
 	}
 
 	/**
-	 * Removes {@link MethodHandler}s extracted from handler object.
+	 * Removes {@link HandlerMethod}s extracted from handler object.
 	 * 
 	 * @param handler
 	 */
 	synchronized public void removeHandler(Object handler) {
-		Map<Class<?>, Set<MethodHandler>> methodsInListener = finder
-				.findAllHandlers(handler);
-		for (Entry<Class<?>, Set<MethodHandler>> entry : methodsInListener
+		Map<Class<?>, Set<HandlerMethod>> methodsInListener = finder
+				.findHandlerMethods(handler);
+		for (Entry<Class<?>, Set<HandlerMethod>> entry : methodsInListener
 				.entrySet()) {
-			Set<MethodHandler> currentHandlers = eventHandlerMethods.get(entry
+			Set<HandlerMethod> currentHandlers = eventHandlerMethods.get(entry
 					.getKey());
-			Set<MethodHandler> eventMethodsInListener = entry.getValue();
+			Set<HandlerMethod> eventMethodsInListener = entry.getValue();
 
 			if (currentHandlers == null
 					|| !currentHandlers.containsAll(entry.getValue())) {
@@ -60,30 +62,32 @@ public class EventHandlerRegistry {
 	}
 
 	/**
-	 * Finds all handler objects that has {@link MethodHandler}s connected with
+	 * Finds all handler objects that has {@link HandlerMethod}s connected with
 	 * given eventType.
 	 * 
-	 * @param handler
+	 * @param eventType
+	 * @return handlers
 	 */
 	public Set<Object> findEventHandlers(Class<?> eventType) {
-		Set<MethodHandler> handlerMethods = findEventHandlerMethods(eventType);
+		Set<HandlerMethod> handlerMethods = findEventHandlerMethods(eventType);
 		Set<Object> handlers = new HashSet<Object>();
-		for (MethodHandler methodHandler : handlerMethods) {
+		for (HandlerMethod methodHandler : handlerMethods) {
 			handlers.add(methodHandler.getTarget());
 		}
 		return handlers;
 	}
 
 	/**
-	 * Finds all {@link MethodHandler}s connected with given eventType.
+	 * Finds all {@link HandlerMethod}s connected with given eventType.
 	 * 
-	 * @param handler
+	 * @param eventType
+	 * @return handlerMethods
 	 */
-	public Set<MethodHandler> findEventHandlerMethods(Class<?> eventType) {
-		Set<MethodHandler> handlerMethods = new HashSet<MethodHandler>();
+	public Set<HandlerMethod> findEventHandlerMethods(Class<?> eventType) {
+		Set<HandlerMethod> handlerMethods = new HashSet<HandlerMethod>();
 		Set<Class<?>> eventFlattenedTypes = flattenEventHierarchy(eventType);
 		for (Class<?> eventFlattenedType : eventFlattenedTypes) {
-			Set<MethodHandler> handlers = eventHandlerMethods
+			Set<HandlerMethod> handlers = eventHandlerMethods
 					.get(eventFlattenedType);
 			if (handlers != null) {
 				handlerMethods.addAll(handlers);

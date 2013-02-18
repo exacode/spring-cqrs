@@ -30,11 +30,11 @@ public class LogicConfiguration {
 
 	@Bean
 	public SpringEventBusPostProcessor gateContextPostProcessor() {
-		return new SpringEventBusPostProcessor(gateContext());
+		return new SpringEventBusPostProcessor(gateContext().getEventBus());
 	}
 
 	@Bean
 	public SpringEventBusPostProcessor domainContextPostProcessor() {
-		return new SpringEventBusPostProcessor(domainContext());
+		return new SpringEventBusPostProcessor(domainContext().getEventBus());
 	}
 }

@@ -1,7 +1,11 @@
-package net.exacode.example.infrastructure.eventbus;
+package net.exacode.example.infrastructure.eventbus.mock;
 
-class BEvent {
+public class BEvent {
 	private final String message;
+
+	public BEvent() {
+		this.message = "BEvent";
+	}
 
 	public BEvent(String message) {
 		this.message = message;

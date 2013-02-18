@@ -2,16 +2,14 @@ package net.exacode.example.infrastructure.context.domain;
 
 import net.exacode.example.infrastructure.eventbus.DeadEvent;
 import net.exacode.example.infrastructure.eventbus.EventBus;
-import net.exacode.example.infrastructure.eventbus.dispatch.AsyncEventDispatchStrategy;
-import net.exacode.example.infrastructure.eventbus.dispatch.UniqueEventDispatchStrategy;
-import net.exacode.example.infrastructure.eventbus.dispatch.AsyncEventDispatchStrategy.AsyncEventDescriptor;
-import net.exacode.example.infrastructure.eventbus.dispatch.UniqueEventDispatchStrategy.UniqueEventDescriptor;
-import net.exacode.example.infrastructure.eventbus.handler.AnnotatedMethodHandlerFinder;
+import net.exacode.example.infrastructure.eventbus.builder.EventBusBuilder;
+import net.exacode.example.infrastructure.eventbus.dispatch.AsyncDispatchStrategy.AsyncEventDescriptor;
+import net.exacode.example.infrastructure.eventbus.dispatch.UniqueDispatchStrategy.UniqueEventDescriptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DomainContextImpl extends EventBus implements DomainContext {
+public class DomainContextImpl implements DomainContext {
 	private static class EventDescriptor implements AsyncEventDescriptor,
 			UniqueEventDescriptor {
 
@@ -43,23 +41,44 @@ public class DomainContextImpl extends EventBus implements DomainContext {
 
 	}
 
+	private final EventBus eventBus;
+
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public DomainContextImpl() {
 		EventDescriptor eventDescriptor = new EventDescriptor();
-		AsyncEventDispatchStrategy asyncDispatch = new AsyncEventDispatchStrategy(
-				new EventDescriptor());
-		UniqueEventDispatchStrategy uniqueDispatch = new UniqueEventDispatchStrategy(
-				eventDescriptor, asyncDispatch);
-		setEventDispatchStrategy(uniqueDispatch);
-		setMethodHandlerFindingStrategy(new AnnotatedMethodHandlerFinder<DomainEvent>(
-				DomainEvent.class));
+		eventBus = new EventBusBuilder()
+				.eventDispatchStrategy()
+				.async(eventDescriptor)
+				.unique(eventDescriptor)
+				.buildEventDispatchStrategy()
+				.annotatedMethodHandlerFindingStrategy(
+						DomainEventListener.class).buildEventBus();
 	}
 
 	@DomainEventListener
 	public void handleDeadEvent(DeadEvent deadEvent) {
 		logger.warn("Published event with no handler!\nEvent: {}\nSource: {}",
 				deadEvent.getEvent());
+	}
+
+	@Override
+	public void publish(Object event) {
+		eventBus.publish(event);
+	}
+
+	@Override
+	public void subscribe(Object handler) {
+		eventBus.subscribe(handler);
+	}
+
+	@Override
+	public void unsubscribe(Object handler) {
+		eventBus.unsubscribe(handler);
+	}
+
+	public EventBus getEventBus() {
+		return eventBus;
 	}
 
 }

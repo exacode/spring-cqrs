@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import net.exacode.example.infrastructure.eventbus.handler.EventHandler;
+import net.exacode.example.infrastructure.eventbus.EventHandler;
 
 @EventHandler
 @Target(ElementType.TYPE)

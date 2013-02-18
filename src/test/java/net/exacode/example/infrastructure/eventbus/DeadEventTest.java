@@ -1,6 +1,10 @@
 package net.exacode.example.infrastructure.eventbus;
 
 import junit.framework.Assert;
+import net.exacode.example.infrastructure.eventbus.mock.AEvent;
+import net.exacode.example.infrastructure.eventbus.mock.AEventHandler;
+import net.exacode.example.infrastructure.eventbus.mock.BEvent;
+import net.exacode.example.infrastructure.eventbus.mock.DeadEventHandler;
 import net.exacode.example.suite.UnitTest;
 
 import org.junit.Test;

@@ -6,15 +6,15 @@ import java.lang.reflect.Method;
 import net.exacode.example.infrastructure.Invariant;
 
 /**
- * Represents handler method.
+ * Represents simple handler method.
  * 
  * @author mendlik
  * 
  */
-public class MethodHandler {
+public class SimpleHandlerMethod implements HandlerMethod {
 
 	/**
-	 * Object with the handler method.
+	 * Handler object.
 	 */
 	private final Object target;
 
@@ -31,7 +31,7 @@ public class MethodHandler {
 	 * @param method
 	 *            handler method.
 	 */
-	public MethodHandler(Object target, Method method) {
+	public SimpleHandlerMethod(Object target, Method method) {
 		Invariant.notNull(target, "EventHandler target cannot be null.");
 		Invariant.notNull(method, "EventHandler method cannot be null.");
 
@@ -40,10 +40,20 @@ public class MethodHandler {
 		method.setAccessible(true);
 	}
 
+	/**
+	 * 
+	 * @return handler object
+	 */
+	@Override
 	public Object getTarget() {
 		return target;
 	}
 
+	/**
+	 * 
+	 * @return handler method
+	 */
+	@Override
 	public Method getMethod() {
 		return method;
 	}
@@ -54,13 +64,13 @@ public class MethodHandler {
 	 * @param event
 	 *            event to handle
 	 */
+	@Override
 	public void handleEvent(Object event) {
 		try {
 			method.invoke(target, new Object[] { event });
-		} catch (IllegalArgumentException e) {
-			throw new Error("Method rejected target/argument: " + event, e);
 		} catch (IllegalAccessException e) {
-			throw new Error("Method became inaccessible: " + event, e);
+			throw new IllegalArgumentException("Method became inaccessible: "
+					+ event, e);
 		} catch (InvocationTargetException e) {
 			throw (Error) e.getCause();
 		}
@@ -83,7 +93,7 @@ public class MethodHandler {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		MethodHandler other = (MethodHandler) obj;
+		SimpleHandlerMethod other = (SimpleHandlerMethod) obj;
 		if (method == null) {
 			if (other.method != null)
 				return false;

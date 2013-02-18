@@ -1,15 +1,15 @@
-package net.exacode.example.infrastructure.eventbus;
+package net.exacode.example.infrastructure.eventbus.mock;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import net.exacode.example.infrastructure.eventbus.DeadEvent;
-import net.exacode.example.infrastructure.eventbus.handler.EventHandler;
+import net.exacode.example.infrastructure.eventbus.EventHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class DeadEventHandler {
+public class DeadEventHandler {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private final List<DeadEvent> receivedEvents = new ArrayList<DeadEvent>();

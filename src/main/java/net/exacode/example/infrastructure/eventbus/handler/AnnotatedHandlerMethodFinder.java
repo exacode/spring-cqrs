@@ -13,25 +13,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link MethodHandlerFindingStrategy} for collecting all event handler
- * methods that are marked with the appropriate annotation.
+ * A {@link HandlerMethodFinder} for collecting all event handler
+ * methods that are marked with an appropriate annotation.
  * 
  * @author Paweł Mendelski
  */
-public class AnnotatedMethodHandlerFinder<A extends Annotation> implements
-		MethodHandlerFindingStrategy {
+public class AnnotatedHandlerMethodFinder<A extends Annotation> implements
+		HandlerMethodFinder {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private final Class<A> annotationType;
 
-	public AnnotatedMethodHandlerFinder(Class<A> annotationType) {
+	public AnnotatedHandlerMethodFinder(Class<A> annotationType) {
 		this.annotationType = annotationType;
 	}
 
 	@Override
-	public Map<Class<?>, Set<MethodHandler>> findAllHandlers(Object listener) {
-		Map<Class<?>, Set<MethodHandler>> methodsInListener = new HashMap<Class<?>, Set<MethodHandler>>();
+	public Map<Class<?>, Set<HandlerMethod>> findHandlerMethods(Object listener) {
+		Map<Class<?>, Set<HandlerMethod>> methodsInListener = new HashMap<Class<?>, Set<HandlerMethod>>();
 		Class<?> clazz = listener.getClass();
 
 		for (Method method : clazz.getMethods()) {
@@ -48,11 +48,12 @@ public class AnnotatedMethodHandlerFinder<A extends Annotation> implements
 									+ " arguments.  Event handler methods must require a single argument.");
 				}
 				Class<?> eventType = parameterTypes[0];
-				MethodHandler handler = new MethodHandler(listener, method);
+				HandlerMethod handler = new SimpleHandlerMethod(listener,
+						method);
 
-				Set<MethodHandler> handlers = methodsInListener.get(eventType);
+				Set<HandlerMethod> handlers = methodsInListener.get(eventType);
 				if (handlers == null) {
-					handlers = new HashSet<MethodHandler>();
+					handlers = new HashSet<HandlerMethod>();
 					methodsInListener.put(eventType, handlers);
 				}
 				handlers.add(handler);
@@ -64,7 +65,7 @@ public class AnnotatedMethodHandlerFinder<A extends Annotation> implements
 		return methodsInListener;
 	}
 
-	protected A findMethodAnnotation(Method method, Class<A> annotationType) {
+	private A findMethodAnnotation(Method method, Class<A> annotationType) {
 		return recursivelyFindAnnotation(new ArrayList<Annotation>(),
 				method.getDeclaredAnnotations(), annotationType);
 	}

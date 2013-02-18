@@ -3,12 +3,12 @@ package net.exacode.example.infrastructure.eventbus.dispatch;
 import java.util.Set;
 
 import net.exacode.example.infrastructure.eventbus.EventBus;
-import net.exacode.example.infrastructure.eventbus.handler.MethodHandler;
-
+import net.exacode.example.infrastructure.eventbus.handler.HandlerMethod;
+import net.exacode.example.infrastructure.eventbus.handler.SuppressedHandlerMethod;
 
 /**
  * Enables asynchronous events dispatching. Decorates other
- * {@link EventDispatchStrategy}.
+ * {@link DispatchStrategy}.
  * <p>
  * 
  * If exception (Throwable) occurs during event dispatching then
@@ -17,7 +17,7 @@ import net.exacode.example.infrastructure.eventbus.handler.MethodHandler;
  * @author mendlik
  * 
  */
-public class AsyncEventDispatchStrategy implements EventDispatchStrategy {
+public class AsyncDispatchStrategy implements DispatchStrategy {
 
 	static public interface AsyncEventDescriptor {
 		boolean isAsync(Object event);
@@ -50,7 +50,7 @@ public class AsyncEventDispatchStrategy implements EventDispatchStrategy {
 
 	}
 
-	private AsyncEventDescriptor eventDescriptor = new AsyncEventDescriptor() {
+	public static final AsyncEventDescriptor DEFAULT_EVENT_DESCRIPTOR = new AsyncEventDescriptor() {
 
 		@Override
 		public boolean isAsync(Object event) {
@@ -59,15 +59,17 @@ public class AsyncEventDispatchStrategy implements EventDispatchStrategy {
 
 	};
 
-	public AsyncEventDispatchStrategy(AsyncEventDescriptor eventDescriptor) {
+	public AsyncEventDescriptor eventDescriptor = DEFAULT_EVENT_DESCRIPTOR;
+
+	public AsyncDispatchStrategy(AsyncEventDescriptor eventDescriptor) {
 		this.eventDescriptor = eventDescriptor;
 	}
 
-	public AsyncEventDispatchStrategy() {
+	public AsyncDispatchStrategy() {
 	}
 
 	@Override
-	public void dispatchEvent(Object event, Set<MethodHandler> handlerMethods,
+	public void dispatchEvent(Object event, Set<HandlerMethod> handlerMethods,
 			EventBus eventBus) {
 		if (eventDescriptor.isAsync(event)
 				&& !(event instanceof AsyncInvocationExceptionEvent)) {
@@ -78,17 +80,13 @@ public class AsyncEventDispatchStrategy implements EventDispatchStrategy {
 	}
 
 	private void asyncDispatch(final Object event,
-			Set<MethodHandler> handlerMethods, final EventBus eventBus) {
-		for (final MethodHandler wrapper : handlerMethods) {
+			Set<HandlerMethod> handlerMethods, final EventBus eventBus) {
+		for (final HandlerMethod methodHandler : handlerMethods) {
 			Thread eventDispatchThread = new Thread() {
 				@Override
 				public void run() {
-					try {
-						wrapper.handleEvent(event);
-					} catch (Throwable e) {
-						eventBus.publish(new AsyncInvocationExceptionEvent(e,
-								event));
-					}
+					new SuppressedHandlerMethod(methodHandler, eventBus)
+							.handleEvent(event);
 				}
 			};
 			eventDispatchThread.setPriority(Thread.MIN_PRIORITY);
@@ -96,8 +94,8 @@ public class AsyncEventDispatchStrategy implements EventDispatchStrategy {
 		}
 	}
 
-	private void syncDispatch(Object event, Set<MethodHandler> handlerMethods) {
-		for (MethodHandler wrapper : handlerMethods) {
+	private void syncDispatch(Object event, Set<HandlerMethod> handlerMethods) {
+		for (HandlerMethod wrapper : handlerMethods) {
 			wrapper.handleEvent(event);
 		}
 	}

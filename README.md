@@ -1,30 +1,36 @@
-# Example of cqrs application module #
-
-## Database and query meta model ##
+# Example of cqrs application module
 
 Process of changing table/model structure:
 * Create sql script that do what you want
+* Update entities
 * Update database with Flyway mechanism
-* Update Query Meta Model by JOOQ maven plugin
+* Update meta models (Query Meta Model, Write Meta Model) by QueryDSL maven plugin
 
 Dependencies:
 * *Flyway* - is used as database migration tool.
-* *JOOQ* - is used as a query builder mechanism. Query meta model is used by JOOQ is generated from database tables. 
+* *QueryDSL* - is used as a tool for type safe SQL-like queries.
 
-### Database migration with Flyway ###
+## Write stack
+Uses Hibernate and jpa-querydsl.
+
+## Read stack
+Uses sql-querydsl with spring-jdbc-extension.
+
+## Database migration with Flyway
 * After project is deployed on server, database is automatically initialized and upgreaded. There is no need to use command tool.
 * If you want to manually upgread the database. Use command tool: 
 	
 	mvn -Pdb-tools initialize flyway:init
 	mvn -Pdb-tools initialize flyway:migrate
 
-### Generating JOOQ - Query Meta Model ### 
-* Meta model is generated to src/main/java location so there is no need to generate automatically by IDE
+## Generating Query Meta Model
+Query meta model is generated from tables from database.
+It is is generated to src/main/java location, so there is no need to generate automatically by IDE or to generate it during integration tests on hudson.
 
-	mvn -Pdb-tools initialize org.jooq:jooq-codegen-maven:generate
+	mvn -Pdb-tools initialize com.mysema.querydsl:querydsl-maven-plugin:export
 	
 
-### Database and Query Meta Model in single command ### 
-Update database and Update Query Meta Model steps can be invoked from single command:
+### Generating Command Meta Model
+Command Meta Model is generated from JPA entities. It is automatically generated during compile phase to target/generated-sources/querydsljpa directory.
 
-	mvn -Pdb-tools process-resources
+	mvn compile
